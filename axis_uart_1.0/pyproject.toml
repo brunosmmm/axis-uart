@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "axis-uart-1-0"
+version = "0.1.0"
+description = "AXI-Stream based UART"
+authors = ["Bruno <brunosmmm@gmail.com>"]
+readme = "README.md"
+packages = [{include = "axis_uart_1"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+hdltools = {git = "https://github.com/brunosmmm/hdltools", rev = "b61f91053e75ca242220d5f922c3b39f408ed52b"}
+
+
+[tool.poetry.group.dev.dependencies]
+cocotb = "^1.7.2"
+cocotb-test = "^0.2.4"
+cocotbext-axi = "^0.1.24"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
