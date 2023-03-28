@@ -1,0 +1,32 @@
+#register_size 32;
+#addr_mode byte;
+
+//registers
+register PRESCALER description="Prescaler Register";
+register FORMAT description="Data Format";
+register STATUS description="Status";
+
+//fields
+field PRESCALER.DIV position=15..0 access=RW description="Prescaler Divider" default=25;
+field PRESCALER.RESERVED position=31..16 access=R description = "Reserved";
+
+field FORMAT.STOPBITS position=0 access=RW description="Stop Bits";
+field FORMAT.PARITY position=3..1 access=RW description="Parity";
+field FORMAT.RESERVED position=31..4 access=R description="Reserved";
+
+field STATUS.TXBUSY position=0 access=R description="TX Busy";
+field STATUS.RXBUSY position=1 access=R description="RX Busy";
+field STATUS.RXEMPTY position=2 access=R description="RX FIFO Empty";
+field STATUS.TXFULL position=3 access=R description="TX FIFO Full";
+field STATUS.RESERVED position=31..4 access=R description="Reserved";
+
+//outputs
+output PR_DIV source=PRESCALER.DIV;
+output STOP_BITS source=FORMAT.STOPBITS;
+output PARITY source=FORMAT.PARITY;
+
+//no inputs!
+input RXE dest=STATUS.RXEMPTY;
+input TXF dest=STATUS.TXFULL;
+input RXB dest=STATUS.RXBUSY;
+input TXB dest=STATUS.TXBUSY;

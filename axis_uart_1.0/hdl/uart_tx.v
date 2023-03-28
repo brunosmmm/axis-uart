@@ -22,25 +22,29 @@
 module uart_tx #(
 	parameter BAUD_PRESCALER = 12,
 	parameter PARITY = 0,
-	parameter BYTE_SIZE = 8,
+	parameter WORD_SIZE = 8,
 	parameter STOP_BITS = 0,
 	parameter FIFO_DEPTH = 16
 )
 (
 	/* AXI-Stream Ports */
-	input wire aclk,
-	input wire aresetn,
-	/* Dynamic Configuration */
-	input wire [23:0]s_axis_config_tdata,
-	input wire s_axis_config_tvalid,
-	output wire s_axis_config_tready,
+	input wire                 aclk,
+	input wire                 aresetn,
 	/* Data */
-	input wire [15:0]s_axis_tdata,
-	input wire s_axis_tvalid,
-	output wire s_axis_tready,
+	input wire [WORD_SIZE-1:0] s_axis_tdata,
+	input wire                 s_axis_tvalid,
+	output wire                s_axis_tready,
 	/* UART Port */
-	output wire txd,
-	input wire ctsn 
+	output wire                txd,
+  input wire                 ctsn,
+
+ // status
+  output wire                busy,
+
+ // configuration
+  input wire [15:0]          prescaler_config,
+  input wire [2:0]           parity_config,
+  input wire                 stop_bits_config
 );
 
 localparam PARITY_NONE = 3'd0;
@@ -63,10 +67,9 @@ reg [3:0]state;
 
 reg [15:0]prescaler;
 reg [2:0]parity;
-reg [3:0]byte_size;
 reg [0:0]stop_bits;
 
-wire [15:0]m_data;
+wire [WORD_SIZE-1:0]m_data;
 wire m_valid;
 reg m_ready;
 
@@ -75,9 +78,12 @@ reg [15:0]counter;
 reg pre_en;
 wire pre_stb;
 
-reg [15:0]tx_data;
+reg [WORD_SIZE-1:0]tx_data;
 reg tx_par;
 (* IOB = "TRUE" *) reg txd_out;
+
+//status
+   assign busy = (state == STATE_IDLE) ? 0: 1;
 
 assign txd = txd_out;
 assign s_axis_config_tready = (state == STATE_IDLE) ? 1'b1 : 1'b0;
@@ -87,14 +93,12 @@ always @(posedge aclk) begin
 	if (aresetn == 1'b0) begin
 		prescaler <= BAUD_PRESCALER;
 		parity <= PARITY;
-		byte_size <= BYTE_SIZE;
 		stop_bits <= STOP_BITS;
 	end else begin
-		if ((s_axis_config_tvalid == 1'b1) && (s_axis_config_tready == 1'b1)) begin
-			prescaler <= s_axis_config_tdata[15:0];
-			parity <= s_axis_config_tdata[18:16];
-			byte_size <= s_axis_config_tdata[22:19];
-			stop_bits <= s_axis_config_tdata[23];
+		if (state == STATE_IDLE) begin
+			prescaler <= prescaler_config;
+			parity <= parity_config;
+			stop_bits <= stop_bits_config;
 		end
 	end
 end
@@ -161,8 +165,8 @@ always @(posedge aclk) begin
 		end
 		STATE_BYTE: begin
 			if (pre_stb == 1'b1) begin
-				tx_data[14:0] <= tx_data[15:1];
-				if (counter == (byte_size - 1)) begin
+				tx_data[WORD_SIZE-2:0] <= tx_data[WORD_SIZE-1:1];
+				if (counter == (WORD_SIZE - 1)) begin
 					counter <= 0;
 					if (parity == PARITY_NONE) begin
 						state <= STATE_STOP;
@@ -247,7 +251,7 @@ always @(posedge aclk) begin
 end
 
 uart_fifo #(
-	.DATA_WIDTH(16),
+	.DATA_WIDTH(WORD_SIZE),
 	.DATA_DEPTH(FIFO_DEPTH)
 ) fifo_sync_inst (
 	.aclk(aclk),
