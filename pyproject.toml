@@ -8,7 +8,7 @@ packages = [{include = "axis_uart_1"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-hdltools = {git = "https://github.com/brunosmmm/hdltools", rev = "b61f91053e75ca242220d5f922c3b39f408ed52b"}
+hdltools = {git = "https://github.com/brunosmmm/hdltools", rev = "b3f9d42893d76d81304d487f8d59b045d94e16db"}
 
 
 [tool.poetry.group.dev.dependencies]
