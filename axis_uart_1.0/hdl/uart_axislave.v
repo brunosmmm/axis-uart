@@ -8,7 +8,7 @@
 `define STATUS_RXEMPTY_INDEX 2
 `define STATUS_TXFULL_INDEX 3
 `define STATUS_RESERVED_INDEX 4
-module aximm_slave
+module uart_axislave
 #(
 parameter integer C_S_AXI_DATA_WIDTH = 32,
 parameter integer C_S_AXI_ADDR_WIDTH = 5,

@@ -14,7 +14,7 @@ MODULE   = test_$(DUT)
 VERILOG_SOURCES += $(wildcard hdl/*.v)
 
 hdl/uart_axislave.v: misc/axislave.mmap
-	axi_slave_builder $< -o $@
+	axi_slave_builder --modname $(basename $(notdir $@)) $< -o $@
 
 
 clean::
