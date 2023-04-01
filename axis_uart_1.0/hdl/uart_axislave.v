@@ -8,10 +8,11 @@
 `define STATUS_RXEMPTY_INDEX 2
 `define STATUS_TXFULL_INDEX 3
 `define STATUS_RESERVED_INDEX 4
-module uart_axislave
+module aximm_slave
 #(
 parameter integer C_S_AXI_DATA_WIDTH = 32,
-parameter integer C_S_AXI_ADDR_WIDTH = 5
+parameter integer C_S_AXI_ADDR_WIDTH = 5,
+parameter integer default_prescaler = 6'b011001
 )
 (
 input  S_AXI_ACLK,
@@ -75,6 +76,7 @@ input  TXB
     assign S_AXI_RDATA = axi_rdata;
     assign S_AXI_RRESP = axi_rresp;
     assign S_AXI_RVALID = axi_rvalid;
+    localparam [15:0] PRM_default_prescaler = default_prescaler;
     //User logic
     always @(posedge S_AXI_ACLK) begin
         if (S_AXI_ARESETN == 0) begin
@@ -122,7 +124,7 @@ input  TXB
             //Reset Registers
             REG_STATUS <= 32'h00000000;
             REG_FORMAT <= 32'h00000000;
-            REG_PRESCALER <= 32'h00000019;
+            REG_PRESCALER <= {16'b0000000000000000, PRM_default_prescaler};
         end
         else begin
             if (slv_reg_wren) begin
@@ -132,7 +134,7 @@ input  TXB
                     REG_FORMAT <= REG_FORMAT;
                     REG_STATUS <= REG_STATUS;
                 end
-                3'h0: begin
+                4'h0: begin
                     for (byte_index = 0; byte_index <= 3; byte_index = (byte_index+1)) begin
                         if (S_AXI_WSTRB[byte_index] == 1) begin
                             REG_PRESCALER[(byte_index*8)+:8] <= S_AXI_WDATA[(byte_index*8)+:8];
@@ -140,7 +142,7 @@ input  TXB
                     end
                     
                 end
-                3'h1: begin
+                4'h1: begin
                     for (byte_index = 0; byte_index <= 3; byte_index = (byte_index+1)) begin
                         if (S_AXI_WSTRB[byte_index] == 1) begin
                             REG_FORMAT[(byte_index*8)+:8] <= S_AXI_WDATA[(byte_index*8)+:8];
@@ -148,7 +150,7 @@ input  TXB
                     end
                     
                 end
-                3'h2: begin
+                4'h2: begin
                     for (byte_index = 0; byte_index <= 3; byte_index = (byte_index+1)) begin
                         if (S_AXI_WSTRB[byte_index] == 1) begin
                             REG_STATUS[(byte_index*8)+:8] <= S_AXI_WDATA[(byte_index*8)+:8];
@@ -229,13 +231,13 @@ input  TXB
             default: begin
                 reg_data_out <= 1'h0;
             end
-            3'h0: begin
+            4'h0: begin
                 reg_data_out <= {16'b0000000000000000, REG_PRESCALER[15:0]};
             end
-            3'h1: begin
+            4'h1: begin
                 reg_data_out <= {28'b0000000000000000000000000000, REG_FORMAT[3:1], REG_FORMAT[0]};
             end
-            3'h2: begin
+            4'h2: begin
                 reg_data_out <= {28'b0000000000000000000000000000, TXF, RXE, RXB, TXB};
             end
             

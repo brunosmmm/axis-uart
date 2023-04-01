@@ -1,13 +1,15 @@
 #register_size 32;
 #addr_mode byte;
 
+param default_prescaler 25;
+
 //registers
 register PRESCALER description="Prescaler Register";
 register FORMAT description="Data Format";
 register STATUS description="Status";
 
 //fields
-field PRESCALER.DIV position=15..0 access=RW description="Prescaler Divider" default=25;
+field PRESCALER.DIV position=15..0 access=RW description="Prescaler Divider" default=default_prescaler;
 field PRESCALER.RESERVED position=31..16 access=R description = "Reserved";
 
 field FORMAT.STOPBITS position=0 access=RW description="Stop Bits";
